@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Stokify - Control Inteligente de Inventarios{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <!-- Barra de Navegación Estilo ERP -->
+    <nav class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-emerald-500 text-slate-900 p-2 rounded-lg font-black text-xl tracking-wider">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-xl tracking-tight text-white">Stokify</span>
+                        <span class="text-xs text-emerald-400 block font-medium">Control Probabilístico de Inventario</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard
+                    </a>
+                    <a href="{% url 'registrar_movimiento' %}" class="px-3 py-2 rounded-md text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-sm">
+                        <i class="fa-solid fa-plus-circle mr-1"></i> Registrar Movimiento
+                    </a>
+                    <a href="/admin/" target="_blank" class="px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-shield-halved mr-1"></i> Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenedor de Mensajes Flash -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 mb-4 text-sm rounded-lg flex items-center gap-2 shadow-sm
+                    {% if message.tags == 'success' %} bg-emerald-100 text-emerald-800 border border-emerald-300
+                    {% elif message.tags == 'error' %} bg-rose-100 text-rose-800 border border-rose-300
+                    {% else %} bg-sky-100 text-sky-800 border border-sky-300 {% endif %}">
+                    <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Contenido Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+        Stokify &copy; 2026 - Sistema de Inventarios & Optimización Estocástica (SciPy & Django)
+    </footer>
+
+</body>
+</html>

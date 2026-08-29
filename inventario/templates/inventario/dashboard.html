@@ -1,0 +1,175 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Dashboard General - Stokify{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Encabezado y Acciones Rápidas -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Panel de Control de Inventarios</h1>
+            <p class="text-sm text-slate-500">Monitoreo probabilístico en tiempo real con niveles de servicio y punto de reorden.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'exportar_kardex_excel' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+                <i class="fa-solid fa-file-excel"></i> Exportar Kárdex a Excel
+            </a>
+            <a href="{% url 'registrar_movimiento' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i> Entrada / Salida
+            </a>
+        </div>
+    </div>
+
+    <!-- Tarjetas de KPIs -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Tarjeta 1: Valor Inventario -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Valor Total en Bodega</span>
+                <div class="text-2xl font-black text-slate-900 mt-1">${{ total_valor_inventario|floatformat:2 }}</div>
+                <span class="text-xs text-slate-500">Costo total acumulado</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-dollar-sign"></i>
+            </div>
+        </div>
+
+        <!-- Tarjeta 2: Total Productos -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Productos</span>
+                <div class="text-2xl font-black text-slate-900 mt-1">{{ total_productos }}</div>
+                <span class="text-xs text-slate-500">SKUs activos en catálogo</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-barcode"></i>
+            </div>
+        </div>
+
+        <!-- Tarjeta 3: Alerta Reordenar -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-500">Punto de Reorden (ROP)</span>
+                <div class="text-2xl font-black text-amber-600 mt-1">{{ conteo_reorden }}</div>
+                <span class="text-xs text-slate-500">Productos por pedir</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-truck-ramp-box"></i>
+            </div>
+        </div>
+
+        <!-- Tarjeta 4: Estado Crítico -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-rose-500">Riesgo Crítico</span>
+                <div class="text-2xl font-black text-rose-600 mt-1">{{ conteo_criticos }}</div>
+                <span class="text-xs text-slate-500">Bajo el Stock de Seguridad</span>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Principal de Inventario y Análisis Probabilístico -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-slate-900">Estado Estadístico de Productos</h2>
+            <span class="text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full font-medium">Nivel de Servicio: 95% (Z = 1.645)</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th class="py-3.5 px-4">SKU / Producto</th>
+                        <th class="py-3.5 px-4">Categoría</th>
+                        <th class="py-3.5 px-4 text-right">Stock Físico</th>
+                        <th class="py-3.5 px-4 text-center">Demanda ($\mu \pm \sigma$)</th>
+                        <th class="py-3.5 px-4 text-center">Lead Time ($L$)</th>
+                        <th class="py-3.5 px-4 text-right">Seguridad ($SS$)</th>
+                        <th class="py-3.5 px-4 text-right">Reorden ($ROP$)</th>
+                        <th class="py-3.5 px-4 text-center">Riesgo Rotura</th>
+                        <th class="py-3.5 px-4 text-center">Semáforo</th>
+                        <th class="py-3.5 px-4 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for item in productos %}
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-slate-900">{{ item.obj.nombre }}</div>
+                                <span class="text-xs font-mono text-slate-400">{{ item.obj.sku }}</span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                                    {{ item.obj.categoria.nombre }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right font-black text-slate-900">
+                                {{ item.obj.stock_actual }} <span class="text-xs font-normal text-slate-400">{{ item.obj.unidad_medida }}</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-center font-mono text-xs">
+                                {{ item.metricas.media_diaria }} &plusmn; {{ item.metricas.desviacion_diaria }}
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="font-semibold text-slate-700">{{ item.metricas.lead_time_dias }}</span> <span class="text-xs text-slate-400">días</span>
+                            </td>
+                            <td class="py-3.5 px-4 text-right font-semibold text-slate-600">
+                                {{ item.metricas.stock_seguridad }}
+                            </td>
+                            <td class="py-3.5 px-4 text-right font-bold text-indigo-600">
+                                {{ item.metricas.punto_reorden }}
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <div class="inline-flex items-center gap-1 font-semibold text-xs
+                                    {% if item.metricas.prob_desabastecimiento_pct > 20 %}text-rose-600
+                                    {% elif item.metricas.prob_desabastecimiento_pct > 5 %}text-amber-600
+                                    {% else %}text-emerald-600{% endif %}">
+                                    {{ item.metricas.prob_desabastecimiento_pct }}%
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                {% if item.metricas.estado == 'CRITICO' %}
+                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                                        <i class="fa-solid fa-circle-exclamation mr-1"></i> CRÍTICO
+                                    </span>
+                                {% elif item.metricas.estado == 'REORDENAR' %}
+                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                                        <i class="fa-solid fa-truck-fast mr-1"></i> REORDENAR
+                                    </span>
+                                {% elif item.metricas.estado == 'SOBRESTOCK' %}
+                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                                        <i class="fa-solid fa-layer-group mr-1"></i> SOBRESTOCK
+                                    </span>
+                                {% else %}
+                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                        <i class="fa-solid fa-circle-check mr-1"></i> ÓPTIMO
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                <a href="{% url 'exportar_kardex_producto_excel' item.obj.id %}" title="Exportar Kárdex Individual" class="text-slate-400 hover:text-emerald-600 p-1.5 transition">
+                                    <i class="fa-solid fa-file-excel text-base"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="10" class="py-8 text-center text-slate-400">
+                                <i class="fa-solid fa-box-open text-4xl mb-2 block"></i>
+                                No hay productos registrados aún. <br>
+                                <a href="/admin/inventario/producto/add/" target="_blank" class="text-indigo-600 font-semibold hover:underline mt-2 inline-block">
+                                    + Agregar primer producto desde el panel de administración
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
