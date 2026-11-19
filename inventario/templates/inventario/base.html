@@ -2,90 +2,671 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Stokify - Control Inteligente de Inventarios{% endblock %}</title>
-    <!-- Tailwind CSS: Local (Offline / DNS Seguro) + Fallback CDN -->
-    <script src="{% static 'inventario/js/tailwindcss.js' %}"></script>
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome: Local (Offline / Red Universitaria Segura) + Fallback CDN -->
-    <link rel="stylesheet" href="{% static 'inventario/vendor/fontawesome/css/all.min.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Stokify{% endblock %}</title>
 
+  <!-- Tailwind CDN (fallback) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind local -->
+  <script src="{% static 'inventario/js/tailwindcss.js' %}"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            900: '#14532d',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    /* ============================================================
+       STOKIFY – DESIGN SYSTEM TOKENS
+    ============================================================ */
+    :root {
+      --stk-navy:         #0F172A;
+      --stk-bg:           #F8FAFC;
+      --stk-white:        #FFFFFF;
+      --stk-green:        #059669;
+      --stk-green-light:  #D1FAE5;
+      --stk-text:         #0F172A;
+      --stk-muted:        #64748B;
+      --stk-border:       #E2E8F0;
+      --stk-amber:        #F59E0B;
+      --stk-red:          #E11D48;
+      --stk-blue:         #2563EB;
+      --stk-sidebar-width: 240px;
+      --stk-header-height: 64px;
+      --stk-radius:       10px;
+      --stk-shadow:       0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --stk-shadow-md:    0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+    }
+
+    /* ============================================================
+       RESET / BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: var(--stk-bg);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--stk-text);
+    }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    .stk-sidebar {
+      width: var(--stk-sidebar-width);
+      min-height: 100vh;
+      background: var(--stk-navy);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 50;
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+    }
+
+    /* LOGO AREA */
+    .stk-logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 20px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .stk-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--stk-green);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stk-logo-icon svg {
+      width: 22px;
+      height: 22px;
+      color: #fff;
+      stroke: #fff;
+    }
+    .stk-brand {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+    .stk-brand-sub {
+      display: block;
+      font-size: 10px;
+      color: var(--stk-green-light);
+      line-height: 1.4;
+      margin-top: 2px;
+      opacity: 0.85;
+    }
+
+    /* NAV */
+    .stk-nav {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .stk-nav-section-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.3);
+      padding: 12px 8px 6px 8px;
+    }
+    .stk-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease;
+      cursor: pointer;
+    }
+    .stk-nav-item svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      fill: none;
+    }
+    .stk-nav-item:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .stk-nav-item.active {
+      background: var(--stk-green);
+      color: #fff;
+    }
+    .stk-nav-item.active svg {
+      stroke: #fff;
+    }
+
+    /* Disabled / coming-soon nav items */
+    .stk-nav-item-disabled {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.35);
+      cursor: default;
+      position: relative;
+    }
+    .stk-nav-item-disabled svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      fill: none;
+    }
+    .stk-soon-badge {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.4);
+      border-radius: 20px;
+      padding: 2px 7px;
+      letter-spacing: 0.04em;
+    }
+
+    /* SIDEBAR FOOTER */
+    .stk-sidebar-footer {
+      padding: 16px 12px 20px 12px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .stk-version-badge {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(5, 150, 105, 0.15);
+      border: 1px solid rgba(5, 150, 105, 0.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .stk-version-badge svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--stk-green);
+      stroke-width: 2;
+      fill: none;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .stk-version-title {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--stk-green-light);
+      line-height: 1.3;
+    }
+    .stk-version-sub {
+      display: block;
+      font-size: 10px;
+      color: rgba(209, 250, 229, 0.65);
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+
+    /* ============================================================
+       OVERLAY MOBILE
+    ============================================================ */
+    .stk-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 40;
+    }
+    .stk-overlay.active { display: block; }
+
+    /* ============================================================
+       MAIN WRAPPER
+    ============================================================ */
+    .stk-main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      margin-left: var(--stk-sidebar-width);
+      transition: margin-left 0.3s ease;
+    }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    .stk-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: var(--stk-header-height);
+      background: var(--stk-white);
+      border-bottom: 1px solid var(--stk-border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 24px;
+      box-shadow: var(--stk-shadow);
+    }
+
+    /* Hamburger */
+    .stk-hamburger {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--stk-muted);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .stk-hamburger:hover { background: var(--stk-bg); }
+    .stk-hamburger svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+    /* Search */
+    .stk-search-container {
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+    }
+    .stk-search-container svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      stroke: var(--stk-muted);
+      stroke-width: 2;
+      fill: none;
+      pointer-events: none;
+    }
+    .stk-search {
+      width: 100%;
+      height: 38px;
+      background: #F1F5F9;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 0 14px 0 36px;
+      font-size: 13px;
+      color: var(--stk-text);
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .stk-search::placeholder { color: var(--stk-muted); }
+    .stk-search:focus {
+      background: var(--stk-white);
+      border-color: var(--stk-border);
+    }
+
+    /* Header actions */
+    .stk-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    /* Button Registrar Movimiento */
+    .stk-btn-movement {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--stk-green);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 16px;
+      height: 38px;
+      border-radius: 8px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+      box-shadow: 0 1px 2px rgba(5,150,105,0.25);
+    }
+    .stk-btn-movement:hover { background: #047857; color: #fff; }
+
+    /* Admin badge */
+    .stk-admin-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--stk-navy);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .stk-admin-badge:hover { opacity: 0.85; }
+
+    /* ============================================================
+       MESSAGES (Django flash messages)
+    ============================================================ */
+    .stk-messages-container {
+      padding: 0 24px;
+    }
+    .stk-messages-container:empty { display: none; }
+    .stk-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--stk-radius);
+      font-size: 13.5px;
+      font-weight: 500;
+      margin-top: 16px;
+      border: 1px solid transparent;
+    }
+    .stk-alert-success  { background: var(--stk-green-light); color: #065f46; border-color: #a7f3d0; }
+    .stk-alert-error    { background: #FEE2E2; color: #991b1b; border-color: #fecaca; }
+    .stk-alert-warning  { background: #FEF3C7; color: #92400e; border-color: #fde68a; }
+    .stk-alert-info     { background: #DBEAFE; color: #1e40af; border-color: #bfdbfe; }
+    .stk-alert-close {
+      margin-left: auto;
+      cursor: pointer;
+      opacity: 0.6;
+      background: none;
+      border: none;
+      font-size: 16px;
+      line-height: 1;
+      color: inherit;
+    }
+    .stk-alert-close:hover { opacity: 1; }
+
+    /* ============================================================
+       MAIN CONTENT AREA
+    ============================================================ */
+    .stk-content {
+      flex: 1;
+      padding: 28px 24px 40px 24px;
+      min-width: 0;
+    }
+
+    /* ============================================================
+       RESPONSIVE — MOBILE (< 768px)
+    ============================================================ */
+    @media (max-width: 1023px) {
+      .stk-sidebar {
+        transform: translateX(-100%);
+      }
+      .stk-sidebar.open {
+        transform: translateX(0);
+      }
+      .stk-main-wrapper {
+        margin-left: 0;
+      }
+      .stk-hamburger {
+        display: inline-flex;
+      }
+    }
+
+    @media (max-width: 639px) {
+      .stk-search-container {
+        display: none;
+      }
+      .stk-header {
+        padding: 0 16px;
+        gap: 10px;
+      }
+      .stk-content {
+        padding: 20px 16px 32px 16px;
+      }
+      .stk-btn-movement {
+        font-size: 12px;
+        padding: 0 12px;
+      }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
 
-    <!-- Barra de Navegación Estilo ERP -->
-    <nav class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <div class="bg-emerald-500 text-slate-900 p-2 rounded-lg font-black text-xl tracking-wider">
-                        <i class="fa-solid fa-boxes-stacked"></i>
-                    </div>
-                    <div>
-                        <span class="font-extrabold text-xl tracking-tight text-white">Stokify</span>
-                        <span class="text-xs text-emerald-400 block font-medium">Control Probabilístico de Inventario</span>
-                    </div>
-                </div>
+<body>
 
-                <div class="flex items-center gap-4">
-                    <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-200 hover:text-white hover:bg-slate-800 transition">
-                        <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard
-                    </a>
-                    <a href="{% url 'registrar_movimiento' %}" class="px-3 py-2 rounded-md text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-sm">
-                        <i class="fa-solid fa-plus-circle mr-1"></i> Registrar Movimiento
-                    </a>
-                    <a href="/admin/" target="_blank" class="px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
-                        <i class="fa-solid fa-shield-halved mr-1"></i> Admin
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+  <!-- =========================================================
+       SIDEBAR
+  ========================================================= -->
+  <aside id="sidebar" class="stk-sidebar">
 
-    <!-- Contenedor de Mensajes Flash -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="p-4 mb-4 text-sm rounded-lg flex items-center gap-2 shadow-sm
-                    {% if message.tags == 'success' %} bg-emerald-100 text-emerald-800 border border-emerald-300
-                    {% elif message.tags == 'error' %} bg-rose-100 text-rose-800 border border-rose-300
-                    {% else %} bg-sky-100 text-sky-800 border border-sky-300 {% endif %}">
-                    <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
-                    <span>{{ message }}</span>
-                </div>
-            {% endfor %}
-        {% endif %}
+    <!-- Logo + Brand -->
+    <div class="stk-logo-area">
+      <div class="stk-logo-icon">
+        <!-- Cube / Box icon (SVG inline) -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div>
+        <span class="stk-brand">Stokify</span>
+        <span class="stk-brand-sub">Control Probabilístico<br>de Inventario</span>
+      </div>
     </div>
 
-    <!-- Contenido Principal -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {% block content %}{% endblock %}
+    <!-- Navigation -->
+    <nav class="stk-nav">
+      <span class="stk-nav-section-label">Principal</span>
+
+      <!-- Dashboard (único enlace activo) -->
+      <a href="{% url 'dashboard' %}" class="stk-nav-item {% block nav_dashboard %}{% endblock %}">
+        <!-- Grid / Dashboard icon -->
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <span class="stk-nav-section-label" style="margin-top:8px;">Gestión</span>
+
+      <!-- Inventario – coming soon -->
+      <div class="stk-nav-item-disabled">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        Inventario
+        <span class="stk-soon-badge">Pronto</span>
+      </div>
+
+      <!-- Reportes – coming soon -->
+      <div class="stk-nav-item-disabled">
+        <svg viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Reportes
+        <span class="stk-soon-badge">Pronto</span>
+      </div>
+
+      <span class="stk-nav-section-label" style="margin-top:8px;">Sistema</span>
+
+      <!-- Configuración – coming soon -->
+      <div class="stk-nav-item-disabled">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Configuración
+        <span class="stk-soon-badge">Pronto</span>
+      </div>
+
+      <!-- Ayuda – coming soon -->
+      <div class="stk-nav-item-disabled">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Ayuda
+        <span class="stk-soon-badge">Pronto</span>
+      </div>
+    </nav>
+
+    <!-- Sidebar Footer / Version Badge -->
+    <div class="stk-sidebar-footer">
+      <div class="stk-version-badge">
+        <!-- Trending-up icon -->
+        <svg viewBox="0 0 24 24">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          <polyline points="17 6 23 6 23 12"/>
+        </svg>
+        <div>
+          <span class="stk-version-title">Stokify v2.0</span>
+          <span class="stk-version-sub">Inventario inteligente,<br>decisiones más seguras.</span>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- =========================================================
+       MOBILE OVERLAY
+  ========================================================= -->
+  <div id="sidebar-overlay" class="stk-overlay"></div>
+
+  <!-- =========================================================
+       MAIN WRAPPER
+  ========================================================= -->
+  <div class="stk-main-wrapper">
+
+    <!-- HEADER -->
+    <header class="stk-header">
+
+      <!-- Mobile hamburger -->
+      <button id="mobile-menu-btn" class="stk-hamburger" aria-label="Abrir menú">
+        <svg viewBox="0 0 24 24">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <!-- Search (decorativo) -->
+      <div class="stk-search-container">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Buscar productos, categorías..." class="stk-search" autocomplete="off">
+      </div>
+
+      <!-- Header right actions -->
+      <div class="stk-header-actions">
+        <a href="{% url 'registrar_movimiento' %}" class="stk-btn-movement">
+          + Registrar Movimiento
+        </a>
+        <a href="/admin/" target="_blank" rel="noopener noreferrer" class="stk-admin-badge" title="Panel de administración">
+          AL
+        </a>
+      </div>
+
+    </header>
+
+    <!-- FLASH MESSAGES -->
+    {% if messages %}
+    <div class="stk-messages-container">
+      {% for message in messages %}
+      <div class="stk-alert stk-alert-{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+        <span>{{ message }}</span>
+        <button class="stk-alert-close" onclick="this.parentElement.remove()" aria-label="Cerrar">&times;</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- MAIN CONTENT -->
+    <main class="stk-content">
+      {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
-        Stokify &copy; 2026 - Sistema de Inventarios & Optimización Estocástica (SciPy & Django)
-    </footer>
+  </div><!-- /.stk-main-wrapper -->
+
+  <!-- =========================================================
+       MOBILE SIDEBAR TOGGLE — Vanilla JS
+  ========================================================= -->
+  <script>
+    (function () {
+      const btn     = document.getElementById('mobile-menu-btn');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+
+      function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      if (btn) {
+        btn.addEventListener('click', function () {
+          if (sidebar.classList.contains('open')) {
+            closeSidebar();
+          } else {
+            openSidebar();
+          }
+        });
+      }
+
+      if (overlay) {
+        overlay.addEventListener('click', closeSidebar);
+      }
+
+      // Close on escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+          closeSidebar();
+        }
+      });
+
+      // Close sidebar when resizing to desktop
+      window.addEventListener('resize', function () {
+        if (window.innerWidth >= 1024) {
+          closeSidebar();
+        }
+      });
+    })();
+  </script>
+  {% block extra_js %}{% endblock %}
 
 </body>
 </html>

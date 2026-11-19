@@ -1,5 +1,37 @@
 from django.contrib import admin
-from .models import Categoria, Producto, MovimientoInventario
+from .models import Categoria, Producto, MovimientoInventario, Temporada, ImpactoTemporadaCategoria
+
+
+class ImpactoTemporadaCategoriaInline(admin.TabularInline):
+    model = ImpactoTemporadaCategoria
+    extra = 1
+
+
+@admin.register(Temporada)
+class TemporadaAdmin(admin.ModelAdmin):
+    list_display = (
+        'nombre', 
+        'tipo', 
+        'prioridad',
+        'fecha_inicio', 
+        'fecha_fin', 
+        'multiplicador_general', 
+        'peso_historico',
+        'es_recurrente',
+        'activo'
+    )
+    list_filter = ('tipo', 'prioridad', 'es_recurrente', 'activo')
+    search_fields = ('nombre', 'codigo', 'descripcion')
+    inlines = [ImpactoTemporadaCategoriaInline]
+    ordering = ['prioridad', 'fecha_inicio']
+
+
+
+@admin.register(ImpactoTemporadaCategoria)
+class ImpactoTemporadaCategoriaAdmin(admin.ModelAdmin):
+    list_display = ('temporada', 'categoria', 'multiplicador')
+    list_filter = ('temporada', 'categoria')
+
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):

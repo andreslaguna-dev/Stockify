@@ -3,15 +3,19 @@ from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
 import random
-from inventario.models import Categoria, Producto, MovimientoInventario
+from inventario.models import Categoria, Producto, MovimientoInventario, Temporada, ImpactoTemporadaCategoria
 from inventario.services import registrar_movimiento
+from inventario.colombia_calendar import obtener_temporadas_colombia
+
 
 
 class Command(BaseCommand):
-    help = 'Puebla la base de datos con los productos y existencias reales de la hoja de restaurante'
+    help = 'Puebla la base de datos con los productos, existencias reales y temporadas comerciales del restaurante'
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.WARNING('Limpiando base de datos anterior...'))
+        ImpactoTemporadaCategoria.objects.all().delete()
+        Temporada.objects.all().delete()
         MovimientoInventario.objects.all().delete()
         Producto.objects.all().delete()
         Categoria.objects.all().delete()
@@ -91,4 +95,100 @@ class Command(BaseCommand):
                 )
                 MovimientoInventario.objects.filter(pk=mov.pk).update(fecha=fecha_hist)
 
-        self.stdout.write(self.style.SUCCESS(f'¡Éxito! Se cargaron los {Producto.objects.count()} productos reales del restaurante.'))
+        # Crear Temporadas Comerciales Reales de Colombia y Girardot
+        hoy = timezone.localdate()
+        year_actual = hoy.year
+
+        cat_map = {
+            'Pescados y Mariscos': cat_pescados,
+            'Carnes y Aves': cat_carnes,
+            'Acompañamientos y Guarniciones': cat_guarniciones,
+        }
+
+        # Generar temporadas para el año actual con reglas oficiales y ventanas de demanda
+        temporadas_data = obtener_temporadas_colombia(year_actual)
+
+        # Añadir un evento inmediato: "Próximo Fin de Semana con Puente Festivo" (Viernes a Lunes)
+        dias_hasta_viernes = (4 - hoy.weekday()) % 7
+        if dias_hasta_viernes == 0:
+            dias_hasta_viernes = 7
+        viernes_puente = hoy + timedelta(days=dias_hasta_viernes)
+        lunes_puente = viernes_puente + timedelta(days=3)
+
+        temporadas_data.insert(0, {
+            'codigo': f'PUENTE_INMEDIATO_{year_actual}',
+            'nombre': 'Próximo Fin de Semana con Puente Festivo',
+            'tipo': 'PUENTE',
+            'fecha_inicio': viernes_puente,
+            'fecha_fin': lunes_puente,
+            'multiplicador_general': Decimal('2.20'),
+            'prioridad': 2,
+            'descripcion': 'Llegada de turistas desde Bogotá para pasar el puente en Girardot (Viernes a Lunes Festivo).',
+            'impactos': {
+                'Pescados y Mariscos': Decimal('2.60'),
+                'Carnes y Aves': Decimal('1.90'),
+                'Acompañamientos y Guarniciones': Decimal('2.30'),
+            }
+        })
+
+        # Evento Histórico Pasado para demostrar el Aprendizaje Automático:
+        # "Puente Festivo del Mes Pasado" (hace 21 días)
+        fecha_ini_pasado = hoy - timedelta(days=24)
+        fecha_fin_pasado = hoy - timedelta(days=21)
+        temp_pasada = Temporada.objects.create(
+            codigo=f'PUENTE_PASADO_{year_actual}',
+            nombre='Puente Festivo Mes Anterior (Histórico Registrado)',
+            tipo='PUENTE',
+            fecha_inicio=fecha_ini_pasado,
+            fecha_fin=fecha_fin_pasado,
+            multiplicador_general=Decimal('2.00'),
+            prioridad=3,
+            peso_historico=Decimal('0.75'),
+            es_recurrente=True,
+            descripcion='Histórico de ventas registrado durante el puente anterior para calibrar el auto-aprendizaje del modelo.'
+        )
+
+        for temp_info in temporadas_data:
+            # Crear o actualizar temporada
+            t = Temporada.objects.create(
+                codigo=temp_info['codigo'],
+                nombre=temp_info['nombre'],
+                tipo=temp_info['tipo'],
+                fecha_inicio=temp_info['fecha_inicio'],
+                fecha_fin=temp_info['fecha_fin'],
+                multiplicador_general=temp_info['multiplicador_general'],
+                prioridad=temp_info.get('prioridad', 2),
+                peso_historico=Decimal('0.70'),
+                es_recurrente=True,
+                descripcion=temp_info.get('descripcion', '')
+            )
+            for cat_nombre, mult in temp_info.get('impactos', {}).items():
+                if cat_nombre in cat_map:
+                    ImpactoTemporadaCategoria.objects.create(
+                        temporada=t,
+                        categoria=cat_map[cat_nombre],
+                        multiplicador=mult
+                    )
+
+        # Simular salidas más altas durante el puente pasado para que el algoritmo aprenda
+        for prod in Producto.objects.all():
+            salida_base = max(2, int(prod.stock_actual * Decimal('0.15')))
+            # En el evento pasado las ventas fueron 2.3 veces superiores
+            salida_evento = int(salida_base * 2.3)
+            for d in range(4):
+                fecha_mov = fecha_ini_pasado + timedelta(days=d)
+                mov = MovimientoInventario.objects.create(
+                    producto=prod,
+                    tipo='SALIDA',
+                    cantidad=Decimal(str(salida_evento)),
+                    costo_unitario=prod.costo_unitario,
+                    stock_anterior=prod.stock_actual,
+                    stock_resultante=prod.stock_actual,
+                    motivo=f'Venta POS Puente Anterior - Día {d+1}'
+                )
+                MovimientoInventario.objects.filter(pk=mov.pk).update(fecha=fecha_mov)
+
+        total_temp = Temporada.objects.count()
+        self.stdout.write(self.style.SUCCESS(f'¡Éxito! Se cargaron los {Producto.objects.count()} productos, {total_temp} temporadas oficiales colombianas y el histórico de aprendizaje.'))
+
+

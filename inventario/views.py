@@ -7,24 +7,39 @@ from django.utils import timezone
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-from .models import Producto, Categoria, MovimientoInventario
-from .services import registrar_movimiento, calcular_metricas_inventario
+from .models import Producto, Categoria, MovimientoInventario, Temporada
+from .services import registrar_movimiento, calcular_metricas_inventario, obtener_temporada_activa
 
 
 def dashboard_view(request):
     """
-    Vista principal estilo Cuenti / ERP.
-    Muestra KPIs globales y la tabla de productos con análisis estocástico en tiempo real.
+    Vista principal de Stockify adaptada para restaurantes.
+    Permite monitorear stock físico, demanda ajustada por puentes festivos o temporadas,
+    y sugiere compras antes de fechas especiales.
     """
     productos = Producto.objects.filter(activo=True).select_related('categoria')
-    
+    temporadas_disponibles = Temporada.objects.filter(activo=True).order_by('fecha_inicio')
+
+    temporada_param = request.GET.get('temporada', '').strip()
+    temporada_seleccionada = None
+
+    if temporada_param and temporada_param != 'ninguna':
+        try:
+            temporada_seleccionada = Temporada.objects.get(pk=temporada_param, activo=True)
+        except Temporada.DoesNotExist:
+            temporada_seleccionada = None
+    elif temporada_param == '':
+        # Detección automática por fecha
+        temporada_seleccionada = obtener_temporada_activa()
+
     productos_con_metricas = []
     total_valor_inventario = Decimal('0.00')
     conteo_criticos = 0
     conteo_reorden = 0
+    total_sugerido_comprar = 0
 
     for prod in productos:
-        metricas = calcular_metricas_inventario(prod)
+        metricas = calcular_metricas_inventario(prod, temporada=temporada_seleccionada)
         productos_con_metricas.append({
             'obj': prod,
             'metricas': metricas
@@ -34,6 +49,8 @@ def dashboard_view(request):
             conteo_criticos += 1
         elif metricas['estado'] == 'REORDENAR':
             conteo_reorden += 1
+        
+        total_sugerido_comprar += metricas['cantidad_sugerida']
 
     context = {
         'productos': productos_con_metricas,
@@ -41,8 +58,13 @@ def dashboard_view(request):
         'total_valor_inventario': total_valor_inventario,
         'conteo_criticos': conteo_criticos,
         'conteo_reorden': conteo_reorden,
+        'total_sugerido_comprar': total_sugerido_comprar,
+        'temporadas_disponibles': temporadas_disponibles,
+        'temporada_seleccionada': temporada_seleccionada,
+        'temporada_param': temporada_param,
     }
     return render(request, 'inventario/dashboard.html', context)
+
 
 
 def registrar_movimiento_view(request):

@@ -1,175 +1,1322 @@
 {% extends 'inventario/base.html' %}
+{% block title %}Dashboard — Stokify{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
 
-{% block title %}Dashboard General - Stokify{% endblock %}
+{% block extra_css %}
+<style>
+  /* ============================================================
+     BANNER HERO DEL DASHBOARD (Estilo tarjeta ilustrada SaaS)
+  ============================================================ */
+  .stk-hero-banner {
+    background: linear-gradient(135deg, #E6F7F0 0%, #F0FDF4 55%, #D1FAE5 100%);
+    border: 1px solid #A7F3D0;
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 6px -1px rgba(5, 150, 105, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .stk-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .stk-hero-illustration {
+    width: 64px;
+    height: 64px;
+    background: #FFFFFF;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12);
+    border: 1px solid #E2E8F0;
+    flex-shrink: 0;
+  }
+  .stk-hero-illustration svg {
+    width: 36px;
+    height: 36px;
+  }
+  .stk-hero-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: -0.025em;
+    margin: 0;
+    line-height: 1.2;
+  }
+  .stk-hero-subtitle {
+    font-size: 13.5px;
+    color: #334155;
+    margin-top: 4px;
+    margin-bottom: 0;
+  }
+  .stk-btn-export-hero {
+    background: #059669;
+    color: #FFFFFF;
+    padding: 11px 22px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25);
+    transition: background 0.15s, transform 0.15s;
+    white-space: nowrap;
+    border: none;
+    cursor: pointer;
+  }
+  .stk-btn-export-hero:hover {
+    background: #047857;
+    color: #FFFFFF;
+    transform: translateY(-1px);
+  }
+
+  /* ============================================================
+     MODULO DE ESCENARIO GASTRONÓMICO Y TEMPORADAS
+  ============================================================ */
+  .stk-gastronomy-module {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-left: 4px solid #059669;
+    border-radius: 14px;
+    padding: 16px 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+  }
+  .stk-gastro-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .stk-gastro-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .stk-gastro-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #D1FAE5;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .stk-gastro-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0F172A;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stk-gastro-tag {
+    font-size: 11px;
+    font-weight: 700;
+    background: #FEF3C7;
+    color: #92400E;
+    padding: 2px 8px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .stk-gastro-desc {
+    font-size: 12.5px;
+    color: #64748B;
+    margin-top: 2px;
+  }
+  .stk-gastro-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stk-season-select {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #0F172A;
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 7px 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .stk-season-select:focus {
+    border-color: #059669;
+  }
+  .stk-btn-manage {
+    padding: 7px 12px;
+    background: #F1F5F9;
+    color: #475569;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .stk-btn-manage:hover {
+    background: #E2E8F0;
+    color: #0F172A;
+  }
+
+  /* Banner de temporada seleccionada */
+  .stk-season-active-banner {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .stk-season-active-text {
+    font-size: 12.5px;
+    color: #78350F;
+  }
+
+  /* ============================================================
+     KPI GRID Y TARJETAS
+  ============================================================ */
+  .stk-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stk-kpi-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .stk-kpi-content {
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+  }
+  .stk-kpi-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748B;
+  }
+  .stk-kpi-value {
+    font-size: 26px;
+    font-weight: 900;
+    color: #0F172A;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .stk-kpi-desc {
+    font-size: 11.5px;
+    color: #94A3B8;
+  }
+  .stk-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 2;
+  }
+  .stk-kpi-icon--green { background: #D1FAE5; color: #059669; }
+  .stk-kpi-icon--blue  { background: #DBEAFE; color: #2563EB; }
+  .stk-kpi-icon--amber { background: #FEF3C7; color: #D97706; }
+  .stk-kpi-icon--red   { background: #FFE4E6; color: #E11D48; }
+  .stk-value--amber { color: #D97706; }
+  .stk-value--red   { color: #E11D48; }
+
+  .stk-kpi-badge {
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 4px;
+    width: fit-content;
+  }
+  .stk-badge--green { background: #D1FAE5; color: #059669; }
+  .stk-badge--blue  { background: #DBEAFE; color: #2563EB; }
+  .stk-badge--amber { background: #FEF3C7; color: #D97706; }
+  .stk-badge--red   { background: #FFE4E6; color: #E11D48; }
+
+  /* Sparklines decorativos */
+  .stk-kpi-sparkline {
+    position: absolute;
+    right: 12px;
+    bottom: 8px;
+    width: 68px;
+    height: 32px;
+    opacity: 0.75;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ============================================================
+     ANALYTICS ROW
+  ============================================================ */
+  .stk-analytics-row {
+    display: grid;
+    grid-template-columns: 1fr 390px;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stk-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+  }
+  .stk-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .stk-card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stk-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0F172A;
+    margin: 0;
+  }
+  .stk-chart-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .stk-tab {
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    color: #64748B;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .stk-tab--active {
+    background: #059669;
+    color: #FFFFFF;
+    border-color: #059669;
+    font-weight: 600;
+  }
+  .stk-tab:not(.stk-tab--active):hover {
+    background: #F8FAFC;
+    color: #0F172A;
+  }
+
+  /* Contenedores de gráficos */
+  .stk-chart-container canvas {
+    max-height: 230px;
+    width: 100% !important;
+  }
+  .stk-donut-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+    height: 180px;
+  }
+  .stk-donut-center-text {
+    position: absolute;
+    text-align: center;
+    pointer-events: none;
+  }
+  .stk-donut-center-pct {
+    font-size: 24px;
+    font-weight: 900;
+    color: #0F172A;
+    line-height: 1;
+  }
+  .stk-donut-center-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748B;
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .stk-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 10px;
+  }
+  .stk-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: #475569;
+  }
+  .stk-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .stk-health-badge {
+    margin-top: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stk-empty-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    color: #94A3B8;
+    font-size: 13px;
+    text-align: center;
+    gap: 8px;
+  }
+
+  /* ============================================================
+     TABLA DE INVENTARIO
+  ============================================================ */
+  .stk-table-wrapper {
+    overflow-x: auto;
+  }
+  .stk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .stk-table thead tr {
+    background: #F8FAFC;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  .stk-table thead th {
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748B;
+    white-space: nowrap;
+    text-align: left;
+  }
+  .stk-table thead th.text-right  { text-align: right; }
+  .stk-table thead th.text-center { text-align: center; }
+  .stk-table tbody tr {
+    border-bottom: 1px solid #F1F5F9;
+    transition: background 0.15s ease;
+  }
+  .stk-table tbody tr:hover {
+    background: #F8FAFC;
+  }
+  .stk-table tbody td {
+    padding: 14px;
+    vertical-align: middle;
+  }
+  .stk-table tbody td.text-right  { text-align: right; }
+  .stk-table tbody td.text-center { text-align: center; }
+
+  /* Celda de Producto con icono temático */
+  .stk-product-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .stk-product-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #F1F5F9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .stk-product-name {
+    font-weight: 700;
+    color: #0F172A;
+    font-size: 13.5px;
+    line-height: 1.25;
+  }
+  .stk-product-sku {
+    font-size: 11px;
+    color: #94A3B8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    margin-top: 2px;
+  }
+
+  /* Badges y valores */
+  .stk-category-badge {
+    background: #EFF6FF;
+    color: #2563EB;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .stk-stock-value {
+    font-weight: 800;
+    font-size: 14px;
+    color: #0F172A;
+  }
+  .stk-stock-unit {
+    font-size: 10.5px;
+    color: #94A3B8;
+    margin-left: 2px;
+  }
+  .stk-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .stk-unit-label {
+    font-size: 10.5px;
+    color: #94A3B8;
+    margin-top: 2px;
+  }
+  .stk-lead-time {
+    font-size: 12.5px;
+    color: #475569;
+    font-weight: 500;
+  }
+  .stk-ss-value {
+    font-weight: 600;
+    color: #475569;
+    font-size: 13px;
+  }
+  .stk-rop-value {
+    font-weight: 700;
+    color: #2563EB;
+    font-size: 13px;
+  }
+  .stk-unit-inline {
+    font-size: 10px;
+    color: #94A3B8;
+  }
+
+  /* Sugerencia de Pedido */
+  .stk-sug-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #EFF6FF;
+    color: #2563EB;
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 1px solid #BFDBFE;
+  }
+  .stk-sug-neutral {
+    color: #94A3B8;
+    font-weight: 600;
+  }
+
+  /* Riesgo de rotura */
+  .stk-risk-value {
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .stk-risk--high   { color: #E11D48; }
+  .stk-risk--medium { color: #D97706; }
+  .stk-risk--low    { color: #059669; }
+
+  /* Estado */
+  .stk-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .stk-status--optimo    { background: #D1FAE5; color: #059669; }
+  .stk-status--reordenar { background: #FEF3C7; color: #B45309; }
+  .stk-status--critico   { background: #FFE4E6; color: #E11D48; }
+  .stk-status--sobrestock{ background: #EDE9FE; color: #7C3AED; }
+
+  .stk-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .stk-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    color: #64748B;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .stk-action-btn:hover {
+    color: #059669;
+    border-color: #059669;
+    background: #F0FDF4;
+  }
+  .stk-service-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #059669;
+    background: #D1FAE5;
+    padding: 5px 14px;
+    border-radius: 20px;
+  }
+  .stk-table-empty {
+    padding: 48px 20px;
+  }
+  .stk-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: #94A3B8;
+    font-size: 14px;
+  }
+  .stk-empty-link {
+    color: #059669;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .stk-empty-link:hover {
+    text-decoration: underline;
+  }
+
+  /* ============================================================
+     RESPONSIVE
+  ============================================================ */
+  @media (max-width: 1280px) {
+    .stk-analytics-row { grid-template-columns: 1fr 340px; }
+  }
+  @media (max-width: 1024px) {
+    .stk-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .stk-analytics-row { grid-template-columns: 1fr; }
+    .stk-hero-banner { flex-direction: column; align-items: flex-start; }
+    .stk-btn-export-hero { align-self: flex-start; }
+    .stk-gastro-top { flex-direction: column; align-items: flex-start; }
+  }
+  @media (max-width: 640px) {
+    .stk-kpi-grid { grid-template-columns: 1fr; }
+    .stk-hero-left { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
 
-    <!-- Encabezado y Acciones Rápidas -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
-        <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Panel de Control de Inventarios</h1>
-            <p class="text-sm text-slate-500">Monitoreo probabilístico en tiempo real con niveles de servicio y punto de reorden.</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="{% url 'exportar_kardex_excel' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded-lg shadow-sm transition">
-                <i class="fa-solid fa-file-excel"></i> Exportar Kárdex a Excel
-            </a>
-            <a href="{% url 'registrar_movimiento' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">
-                <i class="fa-solid fa-arrow-right-arrow-left"></i> Entrada / Salida
-            </a>
-        </div>
+<!-- =========================================================
+     1. BANNER HERO DEL DASHBOARD (Inspirado en la imagen de referencia)
+========================================================= -->
+<div class="stk-hero-banner">
+  <div class="stk-hero-left">
+    <div class="stk-hero-illustration">
+      <!-- Icono ilustrado 3D de Cajas + Clipboard -->
+      <svg viewBox="0 0 48 48" fill="none">
+        <rect x="6" y="14" width="22" height="22" rx="4" fill="#D97706" fill-opacity="0.2"/>
+        <rect x="8" y="16" width="18" height="18" rx="3" stroke="#D97706" stroke-width="2.5" fill="#FEF3C7"/>
+        <path d="M12 25L17 30L26 19" stroke="#059669" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="22" y="8" width="20" height="26" rx="3" fill="#FFFFFF" stroke="#059669" stroke-width="2.5"/>
+        <line x1="27" y1="17" x2="37" y2="17" stroke="#059669" stroke-width="2" stroke-linecap="round"/>
+        <line x1="27" y1="22" x2="35" y2="22" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+        <line x1="27" y1="27" x2="32" y2="27" stroke="#64748B" stroke-width="2" stroke-linecap="round"/>
+      </svg>
     </div>
-
-    <!-- Tarjetas de KPIs -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- Tarjeta 1: Valor Inventario -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Valor Total en Bodega</span>
-                <div class="text-2xl font-black text-slate-900 mt-1">${{ total_valor_inventario|floatformat:2 }}</div>
-                <span class="text-xs text-slate-500">Costo total acumulado</span>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
-                <i class="fa-solid fa-dollar-sign"></i>
-            </div>
-        </div>
-
-        <!-- Tarjeta 2: Total Productos -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Productos</span>
-                <div class="text-2xl font-black text-slate-900 mt-1">{{ total_productos }}</div>
-                <span class="text-xs text-slate-500">SKUs activos en catálogo</span>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
-                <i class="fa-solid fa-barcode"></i>
-            </div>
-        </div>
-
-        <!-- Tarjeta 3: Alerta Reordenar -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-amber-500">Punto de Reorden (ROP)</span>
-                <div class="text-2xl font-black text-amber-600 mt-1">{{ conteo_reorden }}</div>
-                <span class="text-xs text-slate-500">Productos por pedir</span>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
-                <i class="fa-solid fa-truck-ramp-box"></i>
-            </div>
-        </div>
-
-        <!-- Tarjeta 4: Estado Crítico -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-            <div>
-                <span class="text-xs font-bold uppercase tracking-wider text-rose-500">Riesgo Crítico</span>
-                <div class="text-2xl font-black text-rose-600 mt-1">{{ conteo_criticos }}</div>
-                <span class="text-xs text-slate-500">Bajo el Stock de Seguridad</span>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-        </div>
+    <div>
+      <h1 class="stk-hero-title">Panel de Control de Inventarios</h1>
+      <p class="stk-hero-subtitle">Monitorea el inventario en tiempo real con niveles de servicio y punto de reorden.</p>
     </div>
+  </div>
+  <div>
+    <a href="{% url 'exportar_kardex_excel' %}" class="stk-btn-export-hero">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Exportar Reporte
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </a>
+  </div>
+</div>
 
-    <!-- Tabla Principal de Inventario y Análisis Probabilístico -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-900">Estado Estadístico de Productos</h2>
-            <span class="text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full font-medium">Nivel de Servicio: 95% (Z = 1.645)</span>
-        </div>
+<!-- =========================================================
+     2. TARJETAS KPI (4 Métricas Clave con Sparklines)
+========================================================= -->
+<div class="stk-kpi-grid">
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-sm">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">SKU / Producto</th>
-                        <th class="py-3.5 px-4">Categoría</th>
-                        <th class="py-3.5 px-4 text-right">Stock Físico</th>
-                        <th class="py-3.5 px-4 text-center">Demanda ($\mu \pm \sigma$)</th>
-                        <th class="py-3.5 px-4 text-center">Lead Time ($L$)</th>
-                        <th class="py-3.5 px-4 text-right">Seguridad ($SS$)</th>
-                        <th class="py-3.5 px-4 text-right">Reorden ($ROP$)</th>
-                        <th class="py-3.5 px-4 text-center">Riesgo Rotura</th>
-                        <th class="py-3.5 px-4 text-center">Semáforo</th>
-                        <th class="py-3.5 px-4 text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-slate-700">
-                    {% for item in productos %}
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="py-3.5 px-4">
-                                <div class="font-bold text-slate-900">{{ item.obj.nombre }}</div>
-                                <span class="text-xs font-mono text-slate-400">{{ item.obj.sku }}</span>
-                            </td>
-                            <td class="py-3.5 px-4">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                                    {{ item.obj.categoria.nombre }}
-                                </span>
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-black text-slate-900">
-                                {{ item.obj.stock_actual }} <span class="text-xs font-normal text-slate-400">{{ item.obj.unidad_medida }}</span>
-                            </td>
-                            <td class="py-3.5 px-4 text-center font-mono text-xs">
-                                {{ item.metricas.media_diaria }} &plusmn; {{ item.metricas.desviacion_diaria }}
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                <span class="font-semibold text-slate-700">{{ item.metricas.lead_time_dias }}</span> <span class="text-xs text-slate-400">días</span>
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-semibold text-slate-600">
-                                {{ item.metricas.stock_seguridad }}
-                            </td>
-                            <td class="py-3.5 px-4 text-right font-bold text-indigo-600">
-                                {{ item.metricas.punto_reorden }}
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                <div class="inline-flex items-center gap-1 font-semibold text-xs
-                                    {% if item.metricas.prob_desabastecimiento_pct > 20 %}text-rose-600
-                                    {% elif item.metricas.prob_desabastecimiento_pct > 5 %}text-amber-600
-                                    {% else %}text-emerald-600{% endif %}">
-                                    {{ item.metricas.prob_desabastecimiento_pct }}%
-                                </div>
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                {% if item.metricas.estado == 'CRITICO' %}
-                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-700 border border-rose-200">
-                                        <i class="fa-solid fa-circle-exclamation mr-1"></i> CRÍTICO
-                                    </span>
-                                {% elif item.metricas.estado == 'REORDENAR' %}
-                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-                                        <i class="fa-solid fa-truck-fast mr-1"></i> REORDENAR
-                                    </span>
-                                {% elif item.metricas.estado == 'SOBRESTOCK' %}
-                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-700 border border-purple-200">
-                                        <i class="fa-solid fa-layer-group mr-1"></i> SOBRESTOCK
-                                    </span>
-                                {% else %}
-                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
-                                        <i class="fa-solid fa-circle-check mr-1"></i> ÓPTIMO
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="py-3.5 px-4 text-center">
-                                <a href="{% url 'exportar_kardex_producto_excel' item.obj.id %}" title="Exportar Kárdex Individual" class="text-slate-400 hover:text-emerald-600 p-1.5 transition">
-                                    <i class="fa-solid fa-file-excel text-base"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="10" class="py-8 text-center text-slate-400">
-                                <i class="fa-solid fa-box-open text-4xl mb-2 block"></i>
-                                No hay productos registrados aún. <br>
-                                <a href="/admin/inventario/producto/add/" target="_blank" class="text-indigo-600 font-semibold hover:underline mt-2 inline-block">
-                                    + Agregar primer producto desde el panel de administración
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  <!-- KPI 1: Valor Total en Bodega -->
+  <div class="stk-kpi-card">
+    <div class="stk-kpi-content">
+      <span class="stk-kpi-label">Valor Total en Bodega</span>
+      <div class="stk-kpi-value">${{ total_valor_inventario|floatformat:2 }}</div>
+      <div class="stk-kpi-badge stk-badge--green">
+        <span>&uarr; Costo acumulado</span>
+      </div>
     </div>
+    <div class="stk-kpi-icon stk-kpi-icon--green">
+      <!-- Icono trending / finanzas -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+        <polyline points="17 6 23 6 23 12"/>
+      </svg>
+    </div>
+    <!-- Micro sparkline verde decorativo -->
+    <svg class="stk-kpi-sparkline" viewBox="0 0 68 32" fill="none">
+      <path d="M2 28 C 16 26, 24 16, 36 18 C 48 20, 56 6, 66 4" stroke="#059669" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- KPI 2: Total Productos -->
+  <div class="stk-kpi-card">
+    <div class="stk-kpi-content">
+      <span class="stk-kpi-label">Total Productos</span>
+      <div class="stk-kpi-value">{{ total_productos }}</div>
+      <div class="stk-kpi-badge stk-badge--blue">
+        <span>&#9679; Activos en catálogo</span>
+      </div>
+    </div>
+    <div class="stk-kpi-icon stk-kpi-icon--blue">
+      <!-- Icono cubo / inventario -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+        <line x1="12" y1="22.08" x2="12" y2="12"/>
+      </svg>
+    </div>
+    <!-- Mini barritas azules decorativas -->
+    <svg class="stk-kpi-sparkline" viewBox="0 0 68 32" fill="none">
+      <rect x="8"  y="18" width="6" height="12" rx="2" fill="#93C5FD"/>
+      <rect x="20" y="12" width="6" height="18" rx="2" fill="#93C5FD"/>
+      <rect x="32" y="8"  width="6" height="22" rx="2" fill="#60A5FA"/>
+      <rect x="44" y="14" width="6" height="16" rx="2" fill="#93C5FD"/>
+      <rect x="56" y="6"  width="6" height="24" rx="2" fill="#3B82F6"/>
+    </svg>
+  </div>
+
+  <!-- KPI 3: Por Pedir al Proveedor -->
+  <div class="stk-kpi-card">
+    <div class="stk-kpi-content">
+      <span class="stk-kpi-label">Por Pedir al Proveedor</span>
+      <div class="stk-kpi-value stk-value--amber">{{ conteo_reorden }}</div>
+      <div class="stk-kpi-badge stk-badge--amber">
+        <span>&#9679; Pendientes de reorden</span>
+      </div>
+    </div>
+    <div class="stk-kpi-icon stk-kpi-icon--amber">
+      <!-- Icono reposición / alerta -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="3" width="15" height="13"/>
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/>
+        <circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+    </div>
+    <!-- Mini barritas naranjas decorativas -->
+    <svg class="stk-kpi-sparkline" viewBox="0 0 68 32" fill="none">
+      <rect x="12" y="16" width="6" height="14" rx="2" fill="#FDE68A"/>
+      <rect x="24" y="20" width="6" height="10" rx="2" fill="#FDE68A"/>
+      <rect x="36" y="12" width="6" height="18" rx="2" fill="#FBBF24"/>
+      <rect x="48" y="8"  width="6" height="22" rx="2" fill="#F59E0B"/>
+    </svg>
+  </div>
+
+  <!-- KPI 4: Stock Crítico / Agotándose -->
+  <div class="stk-kpi-card">
+    <div class="stk-kpi-content">
+      <span class="stk-kpi-label">Stock Crítico / Agotándose</span>
+      <div class="stk-kpi-value stk-value--red">{{ conteo_criticos }}</div>
+      <div class="stk-kpi-badge stk-badge--red">
+        <span>&#33; Requiere Atención Inmediata</span>
+      </div>
+    </div>
+    <div class="stk-kpi-icon stk-kpi-icon--red">
+      <!-- Icono advertencia roja -->
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <!-- Mini barritas rojas decorativas -->
+    <svg class="stk-kpi-sparkline" viewBox="0 0 68 32" fill="none">
+      <rect x="12" y="22" width="6" height="8" rx="2" fill="#FECDD3"/>
+      <rect x="24" y="16" width="6" height="14" rx="2" fill="#FDA4AF"/>
+      <rect x="36" y="10" width="6" height="20" rx="2" fill="#FB7185"/>
+      <rect x="48" y="4"  width="6" height="26" rx="2" fill="#E11D48"/>
+    </svg>
+  </div>
 
 </div>
+
+<!-- =========================================================
+     3. ESCENARIO GASTRONÓMICO Y TEMPORADAS COMERCIALES
+========================================================= -->
+<div class="stk-gastronomy-module">
+  <div class="stk-gastro-top">
+    <div class="stk-gastro-info">
+      <div class="stk-gastro-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+          <line x1="6" y1="1" x2="6" y2="4"/>
+          <line x1="10" y1="1" x2="10" y2="4"/>
+          <line x1="14" y1="1" x2="14" y2="4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="stk-gastro-title">
+          <span>Escenario Gastronómico: Restaurante & Pescados</span>
+          <span class="stk-gastro-tag">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Temporadas & Festivos
+          </span>
+        </div>
+        <div class="stk-gastro-desc">
+          Ajusta automáticamente el colchón de seguridad y el punto de pedido según la afluencia de turistas o celebraciones.
+        </div>
+      </div>
+    </div>
+
+    <!-- Selector real integrado con views.py de Django -->
+    <form method="GET" action="{% url 'dashboard' %}" class="stk-gastro-controls">
+      <select name="temporada" onchange="this.form.submit()" class="stk-season-select">
+        <option value="" {% if not temporada_param or temporada_param == '' %}selected{% endif %}>⚡ Detección Automática por Fecha</option>
+        <option value="ninguna" {% if temporada_param == 'ninguna' %}selected{% endif %}>🌿 Día Normal / Entre Semana (1.0x)</option>
+        {% if temporadas_disponibles %}
+          <optgroup label="Eventos y Festivos Registrados">
+            {% for temp in temporadas_disponibles %}
+              <option value="{{ temp.id }}" {% if temporada_seleccionada.id == temp.id and temporada_param != 'ninguna' %}selected{% endif %}>
+                ⭐ {{ temp.nombre }} ({{ temp.multiplicador_general }}x)
+              </option>
+            {% endfor %}
+          </optgroup>
+        {% endif %}
+      </select>
+      <a href="/admin/inventario/temporada/" target="_blank" title="Configurar más temporadas o festivos" class="stk-btn-manage">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Administrar
+      </a>
+    </form>
+  </div>
+
+  <!-- Banner de temporada activa si existe -->
+  {% if temporada_seleccionada %}
+  <div class="stk-season-active-banner">
+    <div style="font-size: 20px;">🏖️</div>
+    <div class="stk-season-active-text">
+      <strong>{{ temporada_seleccionada.nombre }}</strong>
+      <span style="margin-left: 8px; background: #FDE68A; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 11px;">
+        Factor: {{ temporada_seleccionada.multiplicador_general }}x
+      </span>
+      <span style="margin-left: 6px; font-size: 11px; color: #92400E;">
+        &bull; Ventana: {{ temporada_seleccionada.fecha_inicio|date:"d M" }} al {{ temporada_seleccionada.fecha_fin|date:"d M, Y" }}
+      </span>
+      {% if temporada_seleccionada.descripcion %}
+        <div style="font-size: 11.5px; color: #78350F; margin-top: 2px;">{{ temporada_seleccionada.descripcion }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- =========================================================
+     4. FILA DE ANALÍTICA (Tendencia + Estado del Inventario)
+========================================================= -->
+<div class="stk-analytics-row">
+
+  <!-- Tendencia de Inventario (izquierda) -->
+  <div class="stk-card stk-chart-container">
+    <div class="stk-card-header">
+      <div class="stk-card-title-group">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          <polyline points="17 6 23 6 23 12"/>
+        </svg>
+        <h2 class="stk-card-title">Tendencia de Inventario</h2>
+      </div>
+      <div class="stk-chart-tabs">
+        <button class="stk-tab stk-tab--active" data-period="6m">Últimos 6 meses</button>
+        <button class="stk-tab" data-period="12m">12 meses</button>
+        <button class="stk-tab" data-period="custom">Personalizado</button>
+      </div>
+    </div>
+    <div style="height: 220px; position: relative;">
+      <canvas id="chartTendencia"></canvas>
+      <div id="chartEmptyState" class="stk-empty-chart" style="display:none;">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="9" y1="21" x2="9" y2="9"/>
+        </svg>
+        <p>No hay suficientes datos históricos registrados aún para proyectar la tendencia.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado del Inventario (derecha, Donut) -->
+  <div class="stk-card stk-donut-container">
+    <div class="stk-card-header">
+      <div class="stk-card-title-group">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <h2 class="stk-card-title">Estado del Inventario</h2>
+      </div>
+    </div>
+    <div class="stk-donut-wrapper">
+      <canvas id="chartEstado" width="180" height="180"></canvas>
+      <div class="stk-donut-center-text">
+        <div id="donutCenterPct" class="stk-donut-center-pct">--</div>
+        <div class="stk-donut-center-label">Salud General</div>
+      </div>
+    </div>
+    <div class="stk-donut-legend"></div>
+    <div id="saludBadge" class="stk-health-badge"></div>
+  </div>
+
+</div>
+
+<!-- =========================================================
+     5. TABLA DE CONTROL DE EXISTENCIAS Y PEDIDOS
+========================================================= -->
+<div class="stk-card">
+  <div class="stk-card-header">
+    <div class="stk-card-title-group">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/>
+        <line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      <div>
+        <h2 class="stk-card-title">Control de Existencias y Pedidos</h2>
+        <span style="font-size: 11px; color: #94A3B8;">Punto de pedido calculado con un 95% de nivel de servicio garantizado.</span>
+      </div>
+    </div>
+    <div class="stk-service-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      Nivel de Servicio: 95%
+    </div>
+  </div>
+
+  <div class="stk-table-wrapper">
+    <table class="stk-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Categoría</th>
+          <th class="text-right">Stock Actual</th>
+          <th class="text-center" title="Consumo proyectado por día según el histórico y la temporada">Consumo Estimado</th>
+          <th class="text-center" title="Días que tarda el proveedor en entregar el pedido">Entrega Proveedor</th>
+          <th class="text-right" title="Colchón de reserva mínimo que nunca debe tocarse">Colchón Mínimo</th>
+          <th class="text-right" title="Cuando tu stock baje a este valor o menos, debes hacer el pedido">Punto de Pedido</th>
+          <th class="text-center" title="Unidades sugeridas a pedir al proveedor para abastecer el ciclo">Sugerencia Pedido</th>
+          <th class="text-center" title="Probabilidad de rotura de stock">Riesgo Agotarse</th>
+          <th class="text-center">Estado</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in productos %}
+        <tr>
+          <!-- Producto + Miniatura temática + SKU -->
+          <td>
+            <div class="stk-product-cell">
+              <div class="stk-product-thumb">
+                {% if "Pescados" in item.obj.categoria.nombre %}
+                  <!-- Icono de Pez -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.46-3.44 6-7 6s-7.56-2.54-8.5-6z"/>
+                    <path d="M18 12l4-4v8l-4-4z"/>
+                    <circle cx="10" cy="11" r="1" fill="#059669"/>
+                  </svg>
+                {% elif "Carnes" in item.obj.categoria.nombre %}
+                  <!-- Icono de Carne -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M8 12c2-3 6-3 8 0"/>
+                    <circle cx="9" cy="12" r="1.5" fill="#D97706"/>
+                  </svg>
+                {% else %}
+                  <!-- Icono Guarnición / Vegetales -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                  </svg>
+                {% endif %}
+              </div>
+              <div>
+                <div class="stk-product-name">{{ item.obj.nombre }}</div>
+                <div class="stk-product-sku">{{ item.obj.sku }}</div>
+              </div>
+            </div>
+          </td>
+
+          <!-- Categoría -->
+          <td>
+            <span class="stk-category-badge">{{ item.obj.categoria.nombre }}</span>
+          </td>
+
+          <!-- Stock Actual -->
+          <td class="text-right">
+            <span class="stk-stock-value">{{ item.obj.stock_actual }}</span>
+            <span class="stk-stock-unit">{{ item.obj.unidad_medida }}</span>
+          </td>
+
+          <!-- Consumo Estimado -->
+          <td class="text-center">
+            <span class="stk-mono">
+              {% if item.metricas.consumo_diario_display %}
+                {{ item.metricas.consumo_diario_display }}
+              {% else %}
+                ~{{ item.metricas.media_diaria }} und/día
+              {% endif %}
+            </span>
+            <div class="stk-unit-label" title="{{ item.metricas.detalle_multiplicador }}">
+              {{ item.metricas.media_diaria }} &plusmn; {{ item.metricas.desviacion_diaria }}
+              {% if item.metricas.multiplicador_temporada > 1.0 %}
+                <span style="color: #D97706; font-weight: 700;">&bull; {{ item.metricas.multiplicador_temporada }}x</span>
+              {% endif %}
+            </div>
+          </td>
+
+          <!-- Entrega Proveedor (Lead Time) -->
+          <td class="text-center">
+            <span class="stk-lead-time">{{ item.metricas.lead_time_dias }} días</span>
+          </td>
+
+          <!-- Colchón Mínimo (SS) -->
+          <td class="text-right stk-ss-value">
+            {{ item.metricas.stock_seguridad }}&nbsp;<span class="stk-unit-inline">{{ item.obj.unidad_medida }}</span>
+          </td>
+
+          <!-- Punto de Pedido (ROP) -->
+          <td class="text-right stk-rop-value">
+            {{ item.metricas.punto_reorden }}&nbsp;<span class="stk-unit-inline">{{ item.obj.unidad_medida }}</span>
+          </td>
+
+          <!-- Sugerencia Pedido -->
+          <td class="text-center">
+            {% if item.metricas.cantidad_sugerida and item.metricas.cantidad_sugerida > 0 %}
+              <span class="stk-sug-badge">+{{ item.metricas.cantidad_sugerida }} {{ item.obj.unidad_medida }}</span>
+            {% elif item.metricas.estado == 'CRITICO' or item.metricas.estado == 'REORDENAR' %}
+              <span class="stk-sug-badge">+{{ item.metricas.stock_maximo }} {{ item.obj.unidad_medida }}</span>
+            {% else %}
+              <span class="stk-sug-neutral">&mdash;</span>
+            {% endif %}
+          </td>
+
+          <!-- Riesgo Agotarse -->
+          <td class="text-center">
+            <span class="stk-risk-value
+              {% if item.metricas.prob_desabastecimiento_pct > 20 %}stk-risk--high
+              {% elif item.metricas.prob_desabastecimiento_pct > 5 %}stk-risk--medium
+              {% else %}stk-risk--low{% endif %}">
+              {{ item.metricas.prob_desabastecimiento_pct }}%
+            </span>
+          </td>
+
+          <!-- Estado -->
+          <td class="text-center">
+            {% if item.metricas.estado == 'CRITICO' %}
+              <span class="stk-status stk-status--critico">&#9679; Crítico</span>
+            {% elif item.metricas.estado == 'REORDENAR' %}
+              <span class="stk-status stk-status--reordenar">&#9679; En Riesgo</span>
+            {% elif item.metricas.estado == 'SOBRESTOCK' %}
+              <span class="stk-status stk-status--sobrestock">&#9679; Sobrestock</span>
+            {% else %}
+              <span class="stk-status stk-status--optimo">&#9679; Óptimo</span>
+            {% endif %}
+          </td>
+
+          <!-- Acciones -->
+          <td class="text-center">
+            <div class="stk-actions">
+              <a href="{% url 'exportar_kardex_producto_excel' item.obj.id %}"
+                 title="Exportar Kárdex individual a Excel"
+                 class="stk-action-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+              </a>
+              <a href="/admin/inventario/producto/{{ item.obj.id }}/change/" target="_blank"
+                 title="Editar Producto en Admin"
+                 class="stk-action-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="1"/>
+                  <circle cx="12" cy="5" r="1"/>
+                  <circle cx="12" cy="19" r="1"/>
+                </svg>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="11" class="stk-table-empty">
+            <div class="stk-empty-state">
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+              <p>No hay productos registrados en el inventario aún.</p>
+              <a href="/admin/inventario/producto/add/" target="_blank" class="stk-empty-link">
+                + Agregar primer producto desde el panel de administración
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // 1. Datos del contexto Django
+  const totalProductos = {{ total_productos }};
+  const conteoCriticos = {{ conteo_criticos }};
+  const conteoReorden  = {{ conteo_reorden }};
+  const conteoOptimos  = Math.max(0, totalProductos - conteoCriticos - conteoReorden);
+
+  // 2. Gráfico Donut de Estado del Inventario
+  const ctxEstado = document.getElementById('chartEstado');
+  if (ctxEstado) {
+    const dataEstado = [conteoOptimos, conteoReorden, conteoCriticos];
+    const totalItems = dataEstado.reduce(function(a, b) { return a + b; }, 0);
+
+    if (totalItems > 0) {
+      new Chart(ctxEstado, {
+        type: 'doughnut',
+        data: {
+          labels: ['Óptimo', 'En Riesgo', 'Crítico'],
+          datasets: [{
+            data: dataEstado,
+            backgroundColor: ['#059669', '#F59E0B', '#E11D48'],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          cutout: '74%',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const pct = totalItems ? ((ctx.parsed / totalItems) * 100).toFixed(0) : 0;
+                  return ' ' + ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Cálculo de porcentajes
+      const pctOptimo  = totalItems ? Math.round(conteoOptimos  / totalItems * 100) : 0;
+      const pctReorden = totalItems ? Math.round(conteoReorden  / totalItems * 100) : 0;
+      const pctCritico = totalItems ? Math.round(conteoCriticos / totalItems * 100) : 0;
+
+      // Texto centrado en el donut
+      const centerPctEl = document.getElementById('donutCenterPct');
+      if (centerPctEl) {
+        centerPctEl.textContent = pctOptimo + '%';
+      }
+
+      // Leyenda
+      const legendEl = document.querySelector('.stk-donut-legend');
+      if (legendEl) {
+        legendEl.innerHTML =
+          '<div class="stk-legend-item"><span class="stk-legend-dot" style="background:#059669"></span><span>Óptimo</span><strong style="margin-left:auto">' + pctOptimo + '%</strong></div>' +
+          '<div class="stk-legend-item"><span class="stk-legend-dot" style="background:#F59E0B"></span><span>En Riesgo</span><strong style="margin-left:auto">' + pctReorden + '%</strong></div>' +
+          '<div class="stk-legend-item"><span class="stk-legend-dot" style="background:#E11D48"></span><span>Crítico</span><strong style="margin-left:auto">' + pctCritico + '%</strong></div>';
+      }
+
+      // Badge de salud general
+      const badge = document.getElementById('saludBadge');
+      if (badge) {
+        if (pctOptimo >= 70 && conteoCriticos === 0) {
+          badge.style.background = '#D1FAE5';
+          badge.style.color = '#059669';
+          badge.innerHTML = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> El inventario se encuentra en un estado saludable.';
+        } else if (conteoCriticos > 0) {
+          badge.style.background = '#FFE4E6';
+          badge.style.color = '#E11D48';
+          badge.innerHTML = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Hay ' + conteoCriticos + ' producto(s) en estado crítico.';
+        } else {
+          badge.style.background = '#FEF3C7';
+          badge.style.color = '#D97706';
+          badge.innerHTML = '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Se requiere atención para reposición.';
+        }
+      }
+    } else {
+      const legendEmpty = document.querySelector('.stk-donut-legend');
+      if (legendEmpty) {
+        legendEmpty.innerHTML = '<p style="color:#94A3B8;font-size:12px;text-align:center">Sin productos registrados aún</p>';
+      }
+    }
+  }
+
+  // 3. Gráfico de Tendencia
+  let tendenciaData = [];
+  try {
+    tendenciaData = JSON.parse('{{ tendencia_data|default:"[]"|escapejs }}');
+  } catch(e) {
+    tendenciaData = [];
+  }
+
+  const ctxTendencia = document.getElementById('chartTendencia');
+  if (ctxTendencia) {
+    if (tendenciaData && tendenciaData.length > 0) {
+      new Chart(ctxTendencia, {
+        type: 'line',
+        data: {
+          labels: tendenciaData.map(function(d){ return d.label; }),
+          datasets: [
+            {
+              label: 'Nivel de Stock',
+              data: tendenciaData.map(function(d){ return d.stock; }),
+              borderColor: '#059669',
+              backgroundColor: 'rgba(5,150,105,0.06)',
+              tension: 0.35,
+              fill: true,
+              pointBackgroundColor: '#059669',
+              pointRadius: 4,
+              borderWidth: 2
+            },
+            {
+              label: 'Punto de Reorden',
+              data: tendenciaData.map(function(d){ return d.reorden; }),
+              borderColor: '#059669',
+              borderDash: [5, 5],
+              fill: false,
+              pointRadius: 0,
+              borderWidth: 1.5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: { font: { size: 11, family: 'Inter' }, color: '#64748B' }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: '#F1F5F9' },
+              ticks: { color: '#94A3B8', font: { size: 11 } }
+            },
+            y: {
+              grid: { color: '#F1F5F9' },
+              ticks: { color: '#94A3B8', font: { size: 11 } }
+            }
+          }
+        }
+      });
+      document.getElementById('chartEmptyState').style.display = 'none';
+      ctxTendencia.style.display = 'block';
+    } else {
+      ctxTendencia.style.display = 'none';
+      document.getElementById('chartEmptyState').style.display = 'flex';
+    }
+  }
+
+  // 4. Tabs decorativos
+  document.querySelectorAll('.stk-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      const parent = this.closest('.stk-chart-tabs');
+      if (parent) {
+        parent.querySelectorAll('.stk-tab').forEach(function(t) {
+          t.classList.remove('stk-tab--active');
+        });
+        this.classList.add('stk-tab--active');
+      }
+    });
+  });
+
+})();
+</script>
 {% endblock %}

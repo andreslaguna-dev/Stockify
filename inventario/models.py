@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 
 class Categoria(models.Model):
@@ -121,5 +121,109 @@ class MovimientoInventario(models.Model):
         ordering = ['-fecha']
 
     def __str__(self):
-        return f"{self.tipo} - {self.producto.nombre} ({self.cantidad}) [{self.fecha.strftime('%Y-%m-%d %H:%M')}]"
+        return f"{self.tipo} - {self.producto.nombre} ({self.cantidad}) - {self.fecha.strftime('%d/%m/%Y %H:%M')}"
+
+
+class Temporada(models.Model):
+    """
+    Configura temporadas comerciales, puentes festivos y fechas especiales
+    (Día de la Madre, Semana Santa, Amor y Amistad, Reinado del Turismo, etc.).
+    Implementa ventanas de demanda, prioridad por coincidencia y aprendizaje ponderado.
+    """
+    TIPOS = [
+        ('RELIGIOSA', 'Religiosa / Turística (Semana Santa)'),
+        ('FAMILIAR', 'Familiar / Celebración (Día de la Madre, Padre)'),
+        ('SOCIAL', 'Social / Parejas (Amor y Amistad)'),
+        ('VACACIONES', 'Temporada Vacacional (Año Nuevo, Mitad de Año, Diciembre)'),
+        ('FESTIVAL_LOCAL', 'Festival o Feria Local (Reinado del Turismo Girardot)'),
+        ('PUENTE', 'Puente Festivo Nacional (Ley Emiliani)'),
+        ('OTRO', 'Temporada Personalizada'),
+    ]
+
+    PRIORIDADES = [
+        (1, 'Alta (Prevalece si coincide con otra temporada)'),
+        (2, 'Media'),
+        (3, 'Baja'),
+    ]
+
+    codigo = models.CharField(max_length=60, blank=True, null=True, unique=True, verbose_name="Código Identificador (ej. SEMANA_SANTA_2026)")
+    nombre = models.CharField(max_length=150, verbose_name="Nombre del Evento o Temporada")
+    tipo = models.CharField(max_length=20, choices=TIPOS, default='PUENTE', verbose_name="Tipo de Temporada")
+    fecha_inicio = models.DateField(verbose_name="Inicio de Ventana de Demanda")
+    fecha_fin = models.DateField(verbose_name="Fin de Ventana de Demanda")
+    multiplicador_general = models.DecimalField(
+        max_digits=4, 
+        decimal_places=2, 
+        default=Decimal('1.80'),
+        validators=[MinValueValidator(Decimal('0.10'))],
+        verbose_name="Multiplicador Teórico Base (ej. 2.40 = +140% demanda)"
+    )
+    prioridad = models.PositiveSmallIntegerField(
+        choices=PRIORIDADES,
+        default=2,
+        verbose_name="Prioridad Jerárquica"
+    )
+    peso_historico = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=Decimal('0.70'),
+        validators=[MinValueValidator(Decimal('0.00')), MaxValueValidator(Decimal('1.00'))],
+        verbose_name="Peso del Histórico Empírico vs Base Teórica (0.0 a 1.0)"
+    )
+    es_recurrente = models.BooleanField(
+        default=True, 
+        verbose_name="¿Se repite anualmente con reglas de calendario?"
+    )
+    descripcion = models.TextField(blank=True, null=True, verbose_name="Notas / Observaciones del Negocio")
+    activo = models.BooleanField(default=True, verbose_name="¿Activo?")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Temporada / Evento Comercial"
+        verbose_name_plural = "Temporadas y Eventos Comerciales"
+        ordering = ['prioridad', 'fecha_inicio']
+
+    def __str__(self):
+        return f"{self.nombre} ({self.fecha_inicio.strftime('%d/%m')} al {self.fecha_fin.strftime('%d/%m/%Y')}) - {self.multiplicador_general}x (Prioridad {self.prioridad})"
+
+    def esta_vigente_en(self, fecha_consulta=None):
+        from django.utils import timezone
+        if fecha_consulta is None:
+            fecha_consulta = timezone.localdate()
+        return self.fecha_inicio <= fecha_consulta <= self.fecha_fin
+
+
+
+class ImpactoTemporadaCategoria(models.Model):
+    """
+    Permite afinar el multiplicador por categoría específica en una temporada.
+    Ejemplo: En Semana Santa, Pescados sube a 2.5x pero Carnes baja a 0.6x.
+    """
+    temporada = models.ForeignKey(
+        Temporada, 
+        on_delete=models.CASCADE, 
+        related_name='impactos_categoria',
+        verbose_name="Temporada"
+    )
+    categoria = models.ForeignKey(
+        Categoria, 
+        on_delete=models.CASCADE, 
+        related_name='impactos_temporada',
+        verbose_name="Categoría Afectada"
+    )
+    multiplicador = models.DecimalField(
+        max_digits=4, 
+        decimal_places=2, 
+        validators=[MinValueValidator(Decimal('0.05'))],
+        verbose_name="Multiplicador Específico para esta Categoría (ej. 2.50 = +150%)"
+    )
+
+    class Meta:
+        verbose_name = "Impacto por Categoría en Temporada"
+        verbose_name_plural = "Impactos por Categoría en Temporada"
+        unique_together = ('temporada', 'categoria')
+
+    def __str__(self):
+        return f"{self.temporada.nombre} -> {self.categoria.nombre}: {self.multiplicador}x"
+
 
